@@ -1,0 +1,20 @@
+{
+  "name": "ide-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "server.js",
+  "dependencies": {
+    "@google/genai": "^2.10.0",
+    "@google/generative-ai": "^0.x.x",
+    "cors": "^2.8.5",
+    "dotenv": "^16.x.x",
+    "express": "^4.x.x",
+    "fs-extra": "^11.3.5",
+    "node-pty": "^1.1.0",
+    "ws": "^8.21.0"
+  },
+  "scripts": {
+  "start": "node start.js"
+  }
+}
+
