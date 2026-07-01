@@ -5,7 +5,7 @@ Simple C/C++ IDE vibe-coded in Node.js
 1. Install [Node.js](https://nodejs.org/en/download)
 2. Download the repositorium
 ```
-git clone http https://github.com/misterkarnister/IDEbil
+git clone https://github.com/misterkarnister/IDEbil
 ```
 3. Run the install script
 ```
