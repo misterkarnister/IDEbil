@@ -1,20 +1,17 @@
 import { execSync } from 'child_process';
 import os from 'os';
 
-console.log("🛠️ Rozpoczynamy instalację środowiska dla I DEbil...");
-
-const platform = os.platform();
 
 try {
     // 1. Instalacja zależności Node.js (express, ws, node-pty itp.)
-    console.log("📦 Instalowanie paczek z npm (to może chwilę potrwać)...");
+    console.log("📦 Installing npm packages (this might take a while)");
     execSync('npm install', { stdio: 'inherit' });
-    console.log("✅ Paczki npm zainstalowane pomyślnie.");
+    console.log("✅ Finished");
 
    
 
-    console.log("\n🎉 Proces instalacji zakończony! Możesz teraz uruchomić IDE za pomocą: npm start");
+    console.log("\n🎉 Installation process complete; Start IDE with: npm start");
 
 } catch (error) {
-    console.error("❌ Wystąpił błąd podczas instalacji:", error.message);
+    console.error("❌ Something went wrong:", error.message);
 }

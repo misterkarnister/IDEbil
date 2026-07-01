@@ -9,8 +9,8 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1e1e1e;
-            color: #fff;
+            background-color: #0E0024;
+            color: #F1A5F2;
             display: flex;
             height: 100vh;
             width: 100vw;
@@ -24,6 +24,10 @@
             height: 100%;
             overflow: hidden;
         }
+.codeblocks-user-keyword {
+    color: #F1A5F2 !important;
+    font-weight: bold !important;
+}
 /* Styl dla żółtej strzałki aktualnej linii debuggera */
 .monaco-debug-line-glyph {
     background: #ffcc00;
@@ -53,12 +57,12 @@
     cursor: pointer;
 }
 	.active-tree-item {
-    	background-color: #094771 !important; /* Ładny niebieski kolor zaznaczenia z VS Code */
+    	background-color: #37373d !important; /* Ładny niebieski kolor zaznaczenia z VS Code */
     	color: #ffffff !important;
 }
         #file-explorer {
             width: 220px;
-            background-color: #252526;
+            background-color: #0E0024;
             border-right: 2px solid #3c3c3c;
             display: flex;
             flex-direction: column;
@@ -75,7 +79,7 @@
 /* Ukrywamy ikonę kosza domyślnie, pokazujemy tylko w aktywnym (zaznaczonym) elemencie */
 .tree-delete-btn {
     display: none;
-    color: #f48771;
+    color: #0E0024;
     cursor: pointer;
     font-weight: bold;
     padding: 0 4px;
@@ -91,14 +95,13 @@
     border-radius: 3px;
 }
         #editor-container {
-            flex-grow: 1;
-            height: 65%;
-            width: 100%;
+            flex: 1;
+	    position:relative;
         }
 
         #ai-sidebar {
             width: 350px;
-            background-color: #252526;
+            background-color: #0E0024;
             border-left: 2px solid #3c3c3c;
             display: flex;
             flex-direction: column;
@@ -112,7 +115,7 @@
         
         #chat-output {
             flex: 1;
-            background-color: #1e1e1e;
+            background-color: #130030;
             border: 1px solid #3c3c3c;
             padding: 10px;
             border-radius: 4px;
@@ -122,18 +125,18 @@
         }
 
         #chat-input {
-            background-color: #3c3c3c;
+            background-color: #130030;
             border: 1px solid #6b6b6b;
-            color: white;
+            color: #F1A5F2;
             padding: 10px;
             border-radius: 4px;
             resize: none;
         }
 
         #action-btn {
-            background-color: #0e639c;
-            color: white;
-            border: none;
+            background-color: #130030;
+            color:#F1A5F2;
+            border: 1px solid #3c3c3c;
             padding: 10px;
             margin-top: 8px;
             cursor: pointer;
@@ -142,10 +145,18 @@
         }
 	#file-tree:focus {
     outline: 1px solid #007acc;
-    background-color: #2d2d2d;
+    background-color: #0E0024;
 }
-        #action-btn:hover { background-color: #1177bb; }
-
+        #action-btn:hover { background-color: #8080FF; }
+	#tabs-container {
+            display: none !important; /* <-- NOWOŚĆ: Ukrywa górny pasek plików */
+            display: flex;
+            background-color: #252526;
+            overflow-x: auto;
+            border-bottom: 1px solid #3c3c3c;
+            height: 35px;
+            box-sizing: border-box;
+        }
         #explorer-header {
             display: flex;
             justify-content: space-between;
@@ -153,7 +164,7 @@
             padding: 10px 15px;
             font-size: 11px;
             font-weight: bold;
-            color: #aaaaaa;
+            color:#F1A5F2;
             letter-spacing: 1px;
             border-bottom: 1px solid #3c3c3c;
         }
@@ -161,7 +172,7 @@
         #explorer-add-btn {
             background: none;
             border: none;
-            color: #ccc;
+            color:#F1A5F2;
             font-size: 16px;
             cursor: pointer;
         }
@@ -175,17 +186,17 @@
 
         .tree-item {
             font-size: 13px;
-            color: #cccccc;
+            color:#F1A5F2;
             cursor: pointer;
             transition: background-color 0.15s ease;
         }
         .tree-item:hover {
-            background-color: #2a2d2e;
-            color: #ffffff;
+            background-color:#130030;
+            color:#F1A5F2;
         }
         .tree-item.active {
             background-color: #37373d;
-            color: #ffffff;
+            color:#F1A5F2;
             font-weight: 500;
         }
 
@@ -194,26 +205,26 @@
             width: 8px;
         }
         #terminal-output::-webkit-scrollbar-track {
-            background: #1e1e1e;
+            background: #0E0024;
         }
         #terminal-output::-webkit-scrollbar-thumb {
-            background: #333333;
+            background: #0E0024;
             border-radius: 4px;
         }
         #terminal-output::-webkit-scrollbar-thumb:hover {
-            background: #444444;
+            background: #0E0024;
         }
     </style>
 </head>
 <body>
 
 <div id="welcome-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(30,30,30,0.9); z-index: 9999; display: flex; justify-content: center; align-items: center;">
-    <div style="background: #252526; padding: 30px; border-radius: 8px; border: 1px solid #3c3c3c; width: 400px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-        <h2 style="color: #007acc; margin-top: 0; font-family: sans-serif;">AI C++ IDE</h2>
-	<p style="color: #cccccc; font-size: 14px; margin-bottom: 25px;">Enter project name to open or create a new workspace configuration:</p>
-   	<input type="text" id="modal-project-input" placeholder="e.g. my_project" style="padding: 8px; width: 100%; box-sizing: border-box; margin-bottom: 15px; background: #2d2d2d; color: #fff; border: 1px solid #555; border-radius: 4px;">
+    <div style="background: #0E0024; padding: 30px; border-radius: 8px; border: 1px solid #3c3c3c; width: 400px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+        <h2 style="color: #007acc; margin-top: 0; font-family: sans-serif;">IDEbil</h2>
+	<p style="color: #F1A5F2; font-size: 14px; margin-bottom: 25px;">Enter project name to open or create a new workspace configuration:</p>
+   	<input type="text" id="modal-project-input" placeholder="e.g. my_project" style="padding: 8px; width: 100%; box-sizing: border-box; margin-bottom: 15px; background: #130030; color: #F1A5F2; border: 1px solid #555; border-radius: 4px;">
         
-        <button id="modal-submit-btn" style="width: 100%; padding: 10px; background: #007acc; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+        <button id="modal-submit-btn" style="width: 100%; padding: 10px; background: #130030; color: #F1A5F2; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
             Go to Project
         </button>     
     </div>
@@ -229,24 +240,24 @@
     </div>
 
     <div style="flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; box-sizing: border-box;">
-        <div style="background-color: #2d2d2d; display: flex; height: 35px; align-items: center; border-bottom: 1px solid #252526; flex-shrink: 0; box-sizing: border-box;">
+        <div style="background-color: #0E0024; display: flex; height: 35px; align-items: center; border-bottom: 1px solid #252526; flex-shrink: 0; box-sizing: border-box;">
             <div id="tabs-container" style="display: flex; overflow-x: auto; height: 100%;"></div>
         </div>
         
         <div style="display: flex; flex-direction: column; flex-grow: 1; height: calc(100% - 35px); overflow: hidden; box-sizing: border-box;">
             <div id="editor-container"></div>
             
-            <div id="terminal-panel" style="height: 35%; max-height: 35%; background-color: #1e1e1e; border-top: 2px solid #252526; display: flex; flex-direction: column; font-family: 'Courier New', Courier, monospace; overflow: hidden; box-sizing: border-box; flex-shrink: 0;">
-                <div style="background-color: #252526; padding: 5px 15px; font-size: 11px; color: #ffffff; display: flex; justify-content: space-between; font-family: sans-serif; flex-shrink: 0; height: 24px; align-items: center; box-sizing: border-box;">
+            <div id="terminal-panel" style="height: 35%; max-height: 35%; background-color: #0E0024; border-top: 2px solid #252526; display: flex; flex-direction: column; font-family: 'Courier New', Courier, monospace; overflow: hidden; box-sizing: border-box; flex-shrink: 0;">
+                <div style="background-color:#130030 ; padding: 5px 15px; font-size: 11px; color: #F1A5F2; display: flex; justify-content: space-between; font-family: sans-serif; flex-shrink: 0; height: 24px; align-items: center; box-sizing: border-box;">
                     <span>INTEGRATED TERMINAL</span>
-                    <span style="color: #858585;">bash / cmd</span>
+                    <span style="color: #C061CB;">bash / cmd</span>
                 </div>
                 
-                <div id="terminal-output" style="height: calc(100% - 56px); max-height: calc(100% - 56px); flex-grow: 1; padding: 10px; color: #d4d4d4; font-size: 13px; overflow-y: scroll; overflow-x: hidden; white-space: pre-wrap; background-color: #1e1e1e; box-sizing: border-box;">Welcome to your integrated workspace terminal</div>
+                <div id="terminal-output" style="height: calc(100% - 56px); max-height: calc(100% - 56px); flex-grow: 1; padding: 10px; color:#F1A5F2; font-size: 13px; overflow-y: scroll; overflow-x: hidden; white-space: pre-wrap; background-color: #0E0024; box-sizing: border-box;">Welcome to your integrated workspace terminal</div>
                 
-                <div style="display: flex; background-color: #1e1e1e; border-top: 1px solid #2d2d2d; align-items: center; padding: 4px 10px; flex-shrink: 0; height: 32px; box-sizing: border-box;">
+                <div style="display: flex; background-color:#130030; border-top: 1px solid #252526; align-items: center; padding: 4px 10px; flex-shrink: 0; height: 32px; box-sizing: border-box;">
                     <span style="color: #73c991; font-weight: bold; margin-right: 8px;">$</span>
-                    <input type="text" id="terminal-input" placeholder="Run terminal command..." style="flex-grow: 1; background: transparent; border: none; color: #ffffff; font-family: inherit; font-size: 13px; outline: none;" />
+                    <input type="text" id="terminal-input" placeholder="Run terminal command..." style="flex-grow: 1; background: transparent; border: none; color:#F1A5F2; font-family: inherit; font-size: 13px; outline: none;" />
                 </div>
             </div>
         </div>
@@ -259,11 +270,11 @@
         <button id="action-btn">Analyze Code</button>
     </div>
 
-    <div id="debug-sidebar" style="display: none; width: 350px; background-color: #181818; border-left: 1px solid #2d2d2d; flex-direction: column; height: 100vh; box-sizing: border-box; z-index: 10;">
+    <div id="debug-sidebar" style="display: none; width: 350px; background-color:#0E0024; border-left: 1px solid #2d2d2d; flex-direction: column; height: 100vh; box-sizing: border-box; z-index: 10;">
        <div id="watches-panel" tabindex="-1" style="flex: 1; display: flex; flex-direction: column; border-bottom: 1px solid #2d2d2d; padding: 15px; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <h3 style="margin: 0; color: #569cd6; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">👀 Watches</h3>
-                <button id="add-watch-btn" style="background: none; border: none; color: #73c991; cursor: pointer; font-size: 16px; padding: 0 5px; line-height: 1;" title="Add variable to watch (Alt+W)">+</button>
+                <button id="add-watch-btn" style="background: none; border: none; color: #F1A5F2; cursor: pointer; font-size: 16px; padding: 0 5px; line-height: 1;" title="Add variable to watch (Alt+W)">+</button>
             </div>
             <div id="watches-list" style="font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #cccccc; display: flex; flex-direction: column; gap: 4px;">
                 <span style="color: #6a9955; font-style: italic;">No active watches. Click + to add.</span>

@@ -18,13 +18,79 @@ require(['vs/editor/editor.main'], function () {
 
     const blankModel = monaco.editor.createModel("// Open or create a project file to begin coding\n", "plaintext");
 // ZMIANA: Włączona opcja glyphMargin: true
+	monaco.editor.defineTheme('zaibatsu', {
+        base: 'vs', // Baza jasna (ponieważ tło w XML to 255,255,255)
+        inherit: true,
+        rules: [
+            { token: '', foreground: 'F6F5F4', background: '0E0024' },
+            { token: 'comment', foreground: 'AFAFFF' },                     // Komentarze zwykłe (152,152,217)
+            { token: 'comment.doc', foreground: '8080FF', fontStyle: 'bold' }, // Komentarze dokumentacji (128,128,255)
+            { token: 'keyword', foreground: 'FF5FAF', fontStyle: 'bold' },    // Słowa kluczowe (0,0,160)
+	    { token: 'keyword.user', foreground: 'F1A5F2', fontStyle: 'bold' },
+            { token: 'number', foreground: '87FF00' },                       // Liczby (240,0,240)
+            { token: 'string', foreground: 'FFFF5F' },                       // Ciągi znaków (0,0,255)
+            { token: 'string.char', foreground: 'E0A000' },                  // Znaki pojedyncze 'c' (224,160,0)
+            { token: 'keyword.directive', foreground: '00AFFF' },            // Preprocesor np. #include (0,160,0)
+            { token: 'operator', foreground: 'C061CB' },                     // Operatory (255,0,0)
+            { token: 'delimiter', foreground: 'C061CB' },                    // Nawiasy i separatory traktowane jako operatory
+	    { token: 'delimiter.bracket', foreground: 'C061CB' },  // Nawiasy kwadratowe [] i okrągłe ()
+            { token: 'delimiter.curly', foreground: 'C061CB' },
+            { token: 'type', foreground: 'BE00BE', fontStyle: 'bold' },      // Typy globalne i typedefy (190,0,190)
+            { token: 'tag', foreground: 'E89FEA', fontStyle: 'bold' }        // Słowa kluczowe użytkownika (0,160,0)
+        ],
+        colors: {
+            'editor.background': '#0E0024',         // Tło edytora (Białe)
+            'editor.foreground': '#F6F5F4',         // Domyślny kolor tekstu (Czarny)
+            'editorLineNumber.foreground': '#8080FF',
+            'editor.lineHighlightBackground': '#130030', // Delikatne wyróżnienie aktywnej linii
+            'editorGutter.background': '#130030',
+	    'editorCursor.foreground': '#FFFF5F'
+        }
+    });
+let userKeywordDecorations = [];
+
+function highlightUserKeywords() {
+    if (!editor || !currentProject) return;
+    
+    const model = editor.getModel();
+    if (!model || model.getLanguageId() !== 'cpp') return;
+
+    // Twoje słowa kluczowe z Code::Blocks
+    const userKeywords = [
+        'std', 'cout', 'cin', 'cerr', 'endl', 'vector', 'string', 'map', 'set', 'list', 'deque',
+        'shared_ptr', 'unique_ptr', 'make_shared', 'make_unique', 'pair', 'tuple', 'ifstream', 'ofstream'
+    ];
+
+    const newDecorations = [];
+    const text = model.getValue();
+    
+    // Szukamy pełnych słów za pomocą RegEx
+    const regex = new RegExp(`\\b(${userKeywords.join('|')})\\b`, 'g');
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+        const startPos = model.getPositionAt(match.index);
+        const endPos = model.getPositionAt(match.index + match[0].length);
+
+        newDecorations.push({
+            range: new monaco.Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column),
+            options: {
+                inlineClassName: 'codeblocks-user-keyword' // Nasza klasa CSS
+            }
+        });
+    }
+
+    // Aplikujemy dekoracje do edytora
+    userKeywordDecorations = editor.deltaDecorations(userKeywordDecorations, newDecorations);
+}
     const editor = monaco.editor.create(document.getElementById('editor-container'), {
         model: blankModel, 
-        theme: 'vs-dark', 
+        theme: 'zaibatsu', 
         automaticLayout: true, 
         fontSize: 14, 
         readOnly: true,
-        glyphMargin: true // Ta opcja aktywuje boczny margines na kropki
+        glyphMargin: true, // Ta opcja aktywuje boczny margines na kropki
+	'bracketPairColorization.enabled': false
     });
     const tabsContainer = document.getElementById('tabs-container');
     const fileTreeContainer = document.getElementById('file-tree');
@@ -121,6 +187,15 @@ window.clearDebugLocation = function() {
             toggleBreakpoint(lineNumber);
         }
     });
+    // Uruchom przy każdej zmianie zawartości dokumentu
+editor.onDidChangeModelContent(() => {
+    highlightUserKeywords();
+});
+
+// Uruchom przy zmianie aktywnego pliku
+editor.onDidChangeModel(() => {
+    highlightUserKeywords();
+});
 
 // --- SKRÓTY NAWIGACJI PO KODZIE (Wersja Global-String RegEx) ---
 // Mapowanie własnego skrótu klawiszowego na "Go to Definition"
@@ -491,6 +566,23 @@ const gdbTarget = isWindows ? `gdb ${gdbArgs} "${currentProject}"` : `TERM=dumb 
             if (data.stderr) termOutput.innerHTML += `\n<span style="color: #f48771;">${data.stderr}</span>`;
         }
         termOutput.scrollTop = termOutput.scrollHeight;
+
+	// 2. NAPRAWA INTERFEJSU: Pozwalamy, aby klasa CSS sterowała wszystkim
+            const sidebar = document.getElementById('sidebar');
+            const aiSidebar = document.getElementById('ai-sidebar');
+            const watchesPanel = document.getElementById('watches-panel');
+            const callstackPanel = document.getElementById('callstack-panel');
+
+            // Usuwamy twarde nadpisania stylów, które zablokowały widoki
+            if (aiSidebar) aiSidebar.style.removeProperty('display');
+            if (watchesPanel) watchesPanel.style.removeProperty('display');
+            if (callstackPanel) callstackPanel.style.removeProperty('display');
+
+            // Wyłączamy tryb debugowania – to automatycznie pokaże AI i ukryje zegary przez arkusz CSS!
+            if (sidebar) {
+                sidebar.classList.remove('debug-mode');
+            }    // 3. Czyszczenie UI za pomocą Twojej wbudowanej funkcji globalnej
+    
     }
     // --- FUNKCJA POMOCNICZA DO STEROWANIA GDB PRZEZ SKRÓTY KLAWISZOWE ---
 function sendGdbCommand(commandText) {
@@ -523,8 +615,22 @@ function stopGdbDebugger() {
         }, 100);
     }
 
-    // 3. Czyszczenie UI za pomocą Twojej wbudowanej funkcji globalnej
-    if (typeof window.clearDebugLocation === 'function') {
+
+// --- ZAKTUALIZOWANA, NIEZAWODNA SEKCJA UI ---
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.classList.remove('debug-mode');
+            }
+
+            const aiSidebar = document.getElementById('ai-sidebar');
+            const watchesPanel = document.getElementById('watches-panel');
+            const callstackPanel = document.getElementById('callstack-panel');
+	    const debugSidebar = document.getElementById('debug-sidebar');
+            if (aiSidebar) aiSidebar.style.display = 'flex';       // Pokazuje AI po zakończeniu
+            if (watchesPanel) watchesPanel.style.display = 'none';   // Chowa zegary
+            if (callstackPanel) callstackPanel.style.display = 'none'; // Chowa callstack
+	    if (debugSidebar) debugSidebar.style.display = 'none';
+	if (window.clearDebugLocation) {
         window.clearDebugLocation();
     }
     
