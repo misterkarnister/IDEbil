@@ -297,6 +297,8 @@ monaco.languages.registerDeclarationProvider('cpp', {
         let targetFlag = "-g"; 
         let buildMode = "debug";
         let sourcePathLog = "fallback defaults";
+	let libsFlag = "";
+	let libDirFlag = "-L lib";
         const pjtKey = `${currentProject}.pjt`;
 
         if (files[pjtKey]) {
@@ -313,7 +315,10 @@ monaco.languages.registerDeclarationProvider('cpp', {
                 if (targetSource) {
                     sourceDir = targetSource.replace(/^\.\//, ''); 
                 }
-
+		const targetLibDir = pjtData["library_dir"] || pjtData["library dir"] || pjtData["libraryDir"];
+                if (targetLibDir) {
+                    libDirFlag = `-L "${targetLibDir}"`;
+                }
                 if (pjtData["target"]) {
                     buildMode = pjtData["target"].toLowerCase().trim();
                     if (buildMode === "release") {
@@ -323,7 +328,14 @@ monaco.languages.registerDeclarationProvider('cpp', {
                         buildMode = "debug"; 
                     }
                 }
-                
+                const targetLibs = pjtData["link_libraries"] || pjtData["link libraries"] || pjtData["linkLibraries"];
+                if (targetLibs) {
+                    if (Array.isArray(targetLibs)) {
+                        libsFlag = targetLibs.map(lib => lib.startsWith('-l') ? lib : `-l${lib}`).join(' ');
+                    } else if (typeof targetLibs === 'string' && targetLibs.trim() !== "") {
+                        libsFlag = targetLibs.trim().split(/\s+/).map(lib => lib.startsWith('-l') ? lib : `-l${lib}`).join(' ');
+                    }
+                }
                 sourcePathLog = `.pjt config (src: "${sourceDir}", include: "${targetInclude || 'include'}", mode: "${buildMode}")`;
             } catch (e) {
                 console.warn("Could not parse .pjt layout config.", e);
@@ -333,9 +345,9 @@ monaco.languages.registerDeclarationProvider('cpp', {
         termOutput.innerHTML += `\n<span style="color: #858585;">ℹ️ Layout tracking: using ${sourcePathLog}</span>`;
 
         // NAPRAWIONE: Tworzenie outputu o nazwie projektu w cudzysłowie (obsługa spacji)
-        const compileCmd = `g++ ${targetFlag} ${includeFlag} ${sourceDir}/*.cpp -o "${currentProject}"`;
-        
-        // NAPRAWIONE: Zamiast "process.platform" (błąd), używamy bezpiecznego dla przeglądarki navigator.userAgent
+        const compileCmd = `g++ ${targetFlag} ${includeFlag} ${libDirFlag} ${sourceDir}/*.cpp -o "${currentProject}" ${libsFlag}`.trim();
+
+	// NAPRAWIONE: Zamiast "process.platform" (błąd), używamy bezpiecznego dla przeglądarki navigator.userAgent
         const isWindows = navigator.userAgent.toLowerCase().includes('win');
         const executeCmd = isWindows ? `"${currentProject}"` : `./"${currentProject}"`;
 
@@ -391,6 +403,8 @@ monaco.languages.registerDeclarationProvider('cpp', {
         let includeFlag = "-I include"; 
         let sourceDir = "src"; 
         let sourcePathLog = "fallback defaults";
+	let libsFlag = "";
+	let libDirFlag = "-L lib";
         const pjtKey = `${currentProject}.pjt`;
 
         // Dynamiczne wyciąganie ścieżek z pliku konfiguracyjnego projektu .pjt
@@ -408,8 +422,18 @@ monaco.languages.registerDeclarationProvider('cpp', {
                 if (targetSource) {
                     sourceDir = targetSource.replace(/^\.\//, ''); 
                 }
-                
-                sourcePathLog = `.pjt config (src: "${sourceDir}", include: "${targetInclude || 'include'}", mode: "debug")`;
+		const targetLibDir = pjtData["library_dir"] || pjtData["library dir"] || pjtData["libraryDir"];
+                if (targetLibDir) {
+                    libDirFlag = `-L "${targetLibDir}"`;
+                }
+               const targetLibs = pjtData["link_libraries"] || pjtData["link libraries"] || pjtData["linkLibraries"];
+                if (targetLibs) {
+                    if (Array.isArray(targetLibs)) {
+                        libsFlag = targetLibs.map(lib => lib.startsWith('-l') ? lib : `-l${lib}`).join(' ');
+                    } else if (typeof targetLibs === 'string' && targetLibs.trim() !== "") {
+                        libsFlag = targetLibs.trim().split(/\s+/).map(lib => lib.startsWith('-l') ? lib : `-l${lib}`).join(' ');
+                    }
+                }                sourcePathLog = `.pjt config (src: "${sourceDir}", include: "${targetInclude || 'include'}", mode: "debug")`;
             } catch (e) {
                 console.warn("Could not parse .pjt layout config.", e);
             }
@@ -418,8 +442,7 @@ monaco.languages.registerDeclarationProvider('cpp', {
         termOutput.innerHTML += `\n<span style="color: #858585;">ℹ️ Debug layout tracking: using ${sourcePathLog}</span>`;
 
         // Dynamicznie zbudowana komenda kompilacji z wymuszoną flagą -g do debugowania
-        const compileCmd = `g++ -g ${includeFlag} ${sourceDir}/*.cpp -o "${currentProject}"`; 
-        
+	const compileCmd = `g++ -g ${includeFlag} ${libDirFlag} ${sourceDir}/*.cpp -o "${currentProject}" ${libsFlag}`.trim();
         const response = await fetch('http://localhost:5000/api/terminal/run', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1128,7 +1151,8 @@ if (e.altKey && e.key === '5') {
                         target: "debug", 
                         source_dir: "./src", 
                         include_dir: "./include", 
-                        link_libraries: ["./lib/libm.a"] 
+			library_dir: "./lib",
+                        link_libraries: "" 
                     }, null, 4), 'json')
                 };
                 files['src/main.cpp'] = {
